@@ -19,11 +19,13 @@ import matplotlib.pyplot
 import numpy as np
 import scipy.ndimage
 
-from colour import Extrapolator1d
-from colour import LinearInterpolator1d
-from colour import RGB_COLOURSPACES
-from colour import SpectralPowerDistribution
-from colour import TriSpectralPowerDistribution
+from colour import (
+    Extrapolator1d,
+    LinearInterpolator1d,
+    RGB_COLOURSPACES,
+    RGB_luminance,
+    SpectralPowerDistribution,
+    TriSpectralPowerDistribution)
 
 __author__ = 'Colour Developers'
 __copyright__ = 'Copyright (C) 2013 - 2014 - Colour Developers'
@@ -34,11 +36,11 @@ __status__ = 'Production'
 
 __all__ = ['RGB_Spectrum',
            'transfer_function',
-           'get_image',
-           'get_image_profile',
+           'read_image',
+           'image_profile',
            'calibrate_RGB_spectrum_profile',
-           'get_RGB_spectrum',
-           'get_luminance_spd']
+           'RGB_spectrum',
+           'luminance_spd']
 
 
 class RGB_Spectrum(TriSpectralPowerDistribution):
@@ -192,9 +194,9 @@ def transfer_function(image,
     return vector_linearise(image)
 
 
-def get_image(path,
-              colourspace=RGB_COLOURSPACES['sRGB'],
-              to_linear=True):
+def read_image(path,
+               colourspace=RGB_COLOURSPACES['sRGB'],
+               to_linear=True):
     """
     Reads image from given path.
 
@@ -223,7 +225,7 @@ def get_image(path,
     return image
 
 
-def get_image_profile(image, line, samples=None):
+def image_profile(image, line, samples=None):
     """
     Returns the image profile using given line coordinates and given samples
     count.
@@ -231,12 +233,11 @@ def get_image_profile(image, line, samples=None):
     Parameters
     ----------
     image : ndarray
-        image: Image to retrieve the profile.
+        Image to retrieve the profile.
     line : tuple or list or ndarray, (x0, y0, x1, y1)
-        line: Coordinates as image array indexes to measure the profile.
+        Coordinates as image array indexes to measure the profile.
     samples : int, optional
-        samples: Samples count to retrieve along the line, default to image
-        width.
+        Samples count to retrieve along the line, default to image width.
 
     Returns
     -------
@@ -274,13 +275,13 @@ def calibrate_RGB_spectrum_profile(profile, reference, measured, samples=None):
     Parameters
     ----------
     profile : ndarray
-        profile: Image profile to calibrate.
+        Image profile to calibrate.
     reference : dict
-        reference: Theoretical reference wavelength lines.
+        Theoretical reference wavelength lines.
     measured : dict
-        measured: Measured lines in horizontal axis pixels values.
+        Measured lines in horizontal axis pixels values.
     samples : int, optional
-        samples: Profile samples count.
+        Profile samples count.
 
     Returns
     -------
@@ -330,21 +331,21 @@ def calibrate_RGB_spectrum_profile(profile, reference, measured, samples=None):
     return RGB_Spectrum('RGB Spectrum', {'R': R, 'G': G, 'B': B})
 
 
-def get_RGB_spectrum(image, reference, measured, samples=None):
+def RGB_spectrum(image, reference, measured, samples=None):
     """
     Returns the RGB spectrum of given image.
 
     Parameters
     ----------
     image : ndarray
-        image: Image to retrieve the RGB spectrum, assuming the spectrum is
-        already properly oriented.
+        Image to retrieve the RGB spectrum, assuming the spectrum is already
+        properly oriented.
     reference : dict
-        reference: Theoretical reference wavelength lines.
+        Theoretical reference wavelength lines.
     measured : dict
-        measured: Measured lines in horizontal axis pixels values.
+        Measured lines in horizontal axis pixels values.
     samples : int, optional
-        samples: Spectrum samples count.
+        Spectrum samples count.
 
     Returns
     -------
@@ -353,9 +354,9 @@ def get_RGB_spectrum(image, reference, measured, samples=None):
     """
 
     samples = samples if samples else image.shape[1]
-    profile = get_image_profile(image,
-                                line=[0, 0, image.shape[1] - 1, 0],
-                                samples=samples)
+    profile = image_profile(image,
+                            line=[0, 0, image.shape[1] - 1, 0],
+                            samples=samples)
 
     return calibrate_RGB_spectrum_profile(profile=profile,
                                           reference=reference,
@@ -363,30 +364,28 @@ def get_RGB_spectrum(image, reference, measured, samples=None):
                                           samples=samples)
 
 
-def get_luminance_spd(RGB_spectrum,
-                      colourspace=RGB_COLOURSPACES['sRGB']):
+def luminance_spd(spectrum,
+                  colourspace=RGB_COLOURSPACES['sRGB']):
     """
     Returns the luminance spectral power distribution of given RGB spectrum.
 
     Parameters
     ----------
-    RGB_spectrum : RGB_Spectrum
-        RGB_spectrum: RGB spectrum to retrieve the luminance from.
+    spectrum : RGB_Spectrum
+        RGB spectrum to retrieve the luminance from.
     colourspace : RGB_Colourspace
-        colourspace: *RGB* Colourspace.
+        *RGB* Colourspace.
 
     SpectralPowerDistribution
         RGB spectrum luminance spectral power distribution, units are arbitrary
         and normalised to [0, 100] domain.
     """
 
-    RGB_spectrum = RGB_spectrum.clone().normalise(100)
-    get_RGB_luminance = lambda x: colour.get_RGB_luminance(
-        x,
-        colourspace.primaries,
-        colourspace.whitepoint)
+    spectrum = spectrum.clone().normalise(100)
+    luminance = lambda x: RGB_luminance(
+        x, colourspace.primaries, colourspace.whitepoint)
 
     return SpectralPowerDistribution(
         'RGB_spectrum',
-        dict([(wavelength, get_RGB_luminance(RGB))
-              for wavelength, RGB in RGB_spectrum]))
+        dict([(wavelength, luminance(RGB))
+              for wavelength, RGB in spectrum]))

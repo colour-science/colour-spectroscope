@@ -25,9 +25,9 @@ import re
 
 import colour.plotting
 from .analysis import (
-    get_RGB_spectrum,
-    get_image,
-    get_luminance_spd,
+    RGB_spectrum,
+    read_image,
+    luminance_spd,
     transfer_function)
 
 __author__ = 'Colour Developers'
@@ -153,24 +153,24 @@ def fraunhofer_lines_plot(image=SUN_SPECTRUM_IMAGE):
         Definition success.
     """
 
-    RGB_spectrum = get_RGB_spectrum(get_image(image),
-                                    FRAUNHOFER_LINES_PUBLISHED,
-                                    FRAUNHOFER_LINES_MEASURED)
+    spectrum = RGB_spectrum(read_image(image),
+                            FRAUNHOFER_LINES_PUBLISHED,
+                            FRAUNHOFER_LINES_MEASURED)
 
-    height = len(RGB_spectrum.R.values) / 8
-    luminance_spd = get_luminance_spd(RGB_spectrum).normalise(height)
+    height = len(spectrum.R.values) / 8
+    spd = luminance_spd(spectrum).normalise(height)
 
     pylab.title('The Solar Spectrum - Fraunhofer Lines')
 
-    wavelengths = RGB_spectrum.wavelengths
+    wavelengths = spectrum.wavelengths
     input, output = min(wavelengths), max(wavelengths)
-    pylab.imshow(np.dstack([transfer_function(RGB_spectrum.R.values),
-                            transfer_function(RGB_spectrum.G.values),
-                            transfer_function(RGB_spectrum.B.values)]),
+    pylab.imshow(np.dstack([transfer_function(spectrum.R.values),
+                            transfer_function(spectrum.G.values),
+                            transfer_function(spectrum.B.values)]),
                  extent=[input, output, 0, height])
 
-    pylab.plot(luminance_spd.wavelengths,
-               luminance_spd.values, color='black',
+    pylab.plot(spd.wavelengths,
+               spd.values, color='black',
                linewidth=1)
 
     fraunhofer_wavelengths = np.array(
@@ -179,8 +179,8 @@ def fraunhofer_lines_plot(image=SUN_SPECTRUM_IMAGE):
         np.where(np.logical_and(fraunhofer_wavelengths >= input,
                                 fraunhofer_wavelengths <= output))]
     fraunhofer_lines_labels = [
-        FRAUNHOFER_LINES_PUBLISHED.keys()[
-            FRAUNHOFER_LINES_PUBLISHED.values().index(i)]
+        tuple(FRAUNHOFER_LINES_PUBLISHED.keys())[
+            tuple(FRAUNHOFER_LINES_PUBLISHED.values()).index(i)]
         for i in fraunhofer_wavelengths]
 
     y0, y1 = 0, height * .5
@@ -198,7 +198,7 @@ def fraunhofer_lines_plot(image=SUN_SPECTRUM_IMAGE):
                 break
 
         power = bisect.bisect_left(wavelengths, fraunhofer_wavelengths[i])
-        scale = (luminance_spd.get(wavelengths[power]) / height)
+        scale = (spd.get(wavelengths[power]) / height)
 
         is_large_line = label in FRAUNHOFER_LINES_NOTABLE
 
