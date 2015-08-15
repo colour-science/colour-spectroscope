@@ -21,7 +21,7 @@ import scipy.ndimage
 
 from colour import (
     Extrapolator1d,
-    LinearInterpolator1d,
+    LinearInterpolator,
     RGB_COLOURSPACES,
     RGB_luminance,
     SpectralPowerDistribution,
@@ -304,18 +304,18 @@ def calibrate_RGB_spectrum_profile(profile, reference, measured, samples=None):
     mm = np.linspace(min(m), max(m))
 
     # Interpolator from reference to measured.
-    r_to_m_interpolator = Extrapolator1d(LinearInterpolator1d(r, m))
+    r_to_m_interpolator = Extrapolator1d(LinearInterpolator(r, m))
 
     # Interpolator from measured range to reference range.
-    mm_to_rr_interpolator = Extrapolator1d(LinearInterpolator1d(mm, rr))
+    mm_to_rr_interpolator = Extrapolator1d(LinearInterpolator(mm, rr))
 
     # Colors interpolator.
     R_interpolator = Extrapolator1d(
-        LinearInterpolator1d(np.arange(0, profile.shape[1]), profile[0, :, 0]))
+        LinearInterpolator(np.arange(0, profile.shape[1]), profile[0, :, 0]))
     G_interpolator = Extrapolator1d(
-        LinearInterpolator1d(np.arange(0, profile.shape[1]), profile[0, :, 1]))
+        LinearInterpolator(np.arange(0, profile.shape[1]), profile[0, :, 1]))
     B_interpolator = Extrapolator1d(
-        LinearInterpolator1d(np.arange(0, profile.shape[1]), profile[0, :, 2]))
+        LinearInterpolator(np.arange(0, profile.shape[1]), profile[0, :, 2]))
 
     wavelengths = np.linspace(mm_to_rr_interpolator([0]),
                               mm_to_rr_interpolator([profile.shape[1]]),

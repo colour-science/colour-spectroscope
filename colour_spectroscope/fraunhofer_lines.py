@@ -226,7 +226,7 @@ def fraunhofer_lines_plot(image=SUN_SPECTRUM_IMAGE):
                 'y_label': False,
                 'legend': False,
                 'limits': [input, output, 0, height],
-                'no_y_ticks': True,
+                'y_ticker': True,
                 'grid': True}
 
     colour.plotting.bounding_box(**settings)
