@@ -14,13 +14,11 @@ References
 
 from __future__ import division, unicode_literals
 
-import matplotlib.image
-import matplotlib.pyplot
 import numpy as np
 import scipy.ndimage
 
 from colour import (
-    Extrapolator1d,
+    Extrapolator,
     LinearInterpolator,
     RGB_COLOURSPACES,
     RGB_luminance,
@@ -35,8 +33,6 @@ __email__ = 'colour-science@googlegroups.com'
 __status__ = 'Production'
 
 __all__ = ['RGB_Spectrum',
-           'transfer_function',
-           'read_image',
            'image_profile',
            'calibrate_RGB_spectrum_profile',
            'RGB_spectrum',
@@ -163,68 +159,6 @@ class RGB_Spectrum(TriSpectralPowerDistribution):
         raise AttributeError('"{0}" attribute is read only!'.format('B'))
 
 
-def transfer_function(image,
-                      colourspace=RGB_COLOURSPACES['sRGB'],
-                      to_linear=False):
-    """
-    Evaluate given colourspace transfer / inverse transfer function on given
-    image data.
-
-    Parameters
-    ----------
-    image : ndarray
-        Image to evaluate the transfer function.
-    colourspace : RGB_Colourspace, optional
-        *RGB* Colourspace.
-    to_linear : bool, optional
-        Use colourspace inverse transfer function instead of colourspace
-        transfer function.
-
-    Returns
-    -------
-    ndarray
-        Transformed image.
-
-    """
-
-    vector_linearise = np.vectorize(
-        lambda x: colourspace.inverse_transfer_function(
-            x) if to_linear else colourspace.transfer_function(x))
-
-    return vector_linearise(image)
-
-
-def read_image(path,
-               colourspace=RGB_COLOURSPACES['sRGB'],
-               to_linear=True):
-    """
-    Reads image from given path.
-
-    Parameters
-    ----------
-    path : unicode
-        Path to read the image from.
-    colourspace : RGB_Colourspace, optional
-        *RGB* Colourspace.
-    to_linear : bool, optional
-        Evaluate colourspace inverse transfer function on image data.
-
-    Returns
-    -------
-    ndarray
-        Image.
-    """
-
-    image = matplotlib.image.imread(path)
-
-    if to_linear:
-        image = transfer_function(image,
-                                  colourspace=colourspace,
-                                  to_linear=True)
-
-    return image
-
-
 def image_profile(image, line, samples=None):
     """
     Returns the image profile using given line coordinates and given samples
@@ -304,17 +238,17 @@ def calibrate_RGB_spectrum_profile(profile, reference, measured, samples=None):
     mm = np.linspace(min(m), max(m))
 
     # Interpolator from reference to measured.
-    r_to_m_interpolator = Extrapolator1d(LinearInterpolator(r, m))
+    r_to_m_interpolator = Extrapolator(LinearInterpolator(r, m))
 
     # Interpolator from measured range to reference range.
-    mm_to_rr_interpolator = Extrapolator1d(LinearInterpolator(mm, rr))
+    mm_to_rr_interpolator = Extrapolator(LinearInterpolator(mm, rr))
 
     # Colors interpolator.
-    R_interpolator = Extrapolator1d(
+    R_interpolator = Extrapolator(
         LinearInterpolator(np.arange(0, profile.shape[1]), profile[0, :, 0]))
-    G_interpolator = Extrapolator1d(
+    G_interpolator = Extrapolator(
         LinearInterpolator(np.arange(0, profile.shape[1]), profile[0, :, 1]))
-    B_interpolator = Extrapolator1d(
+    B_interpolator = Extrapolator(
         LinearInterpolator(np.arange(0, profile.shape[1]), profile[0, :, 2]))
 
     wavelengths = np.linspace(mm_to_rr_interpolator([0]),

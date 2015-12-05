@@ -16,19 +16,17 @@ References
 from __future__ import division, unicode_literals
 
 import bisect
-
 import matplotlib.pyplot
 import numpy as np
 import os
 import pylab
 import re
 
-import colour.plotting
-from .analysis import (
+from colour import sRGB_COLOURSPACE, read_image
+from colour.plotting import boundaries, decorate, display
+from analysis import (
     RGB_spectrum,
-    read_image,
-    luminance_spd,
-    transfer_function)
+    luminance_spd)
 
 __author__ = 'Colour Developers'
 __copyright__ = 'Copyright (C) 2013 - 2015 - Colour Developers'
@@ -47,8 +45,8 @@ __all__ = ['RESOURCES_DIRECTORY',
            'fraunhofer_lines_plot']
 
 RESOURCES_DIRECTORY = os.path.join(os.path.dirname(__file__), 'resources')
-SUN_SPECTRUM_IMAGE = os.path.join(RESOURCES_DIRECTORY,
-                                  'Fraunhofer_Lines_001.png')
+SUN_SPECTRUM_IMAGE = str(os.path.join(RESOURCES_DIRECTORY,
+                                  'Fraunhofer_Lines_001.png'))
 
 FRAUNHOFER_LINES_PUBLISHED = {
     'y': 898.765,
@@ -164,10 +162,11 @@ def fraunhofer_lines_plot(image=SUN_SPECTRUM_IMAGE):
 
     wavelengths = spectrum.wavelengths
     input, output = min(wavelengths), max(wavelengths)
-    pylab.imshow(np.dstack([transfer_function(spectrum.R.values),
-                            transfer_function(spectrum.G.values),
-                            transfer_function(spectrum.B.values)]),
-                 extent=[input, output, 0, height])
+    pylab.imshow(sRGB_COLOURSPACE.OECF(
+        np.dstack([spectrum.R.values,
+                   spectrum.G.values,
+                   spectrum.B.values])),
+        extent=[input, output, 0, height])
 
     pylab.plot(spd.wavelengths,
                spd.values, color='black',
@@ -229,11 +228,11 @@ def fraunhofer_lines_plot(image=SUN_SPECTRUM_IMAGE):
                 'y_ticker': True,
                 'grid': True}
 
-    colour.plotting.bounding_box(**settings)
+    boundaries(**settings)
 
-    colour.plotting.aspect(**settings)
+    decorate(**settings)
 
-    return colour.plotting.display(**settings)
+    return display(**settings)
 
 
 if __name__ == '__main__':
