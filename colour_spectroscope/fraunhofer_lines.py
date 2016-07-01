@@ -162,7 +162,7 @@ def fraunhofer_lines_plot(image=SUN_SPECTRUM_IMAGE):
 
     wavelengths = spectrum.wavelengths
     input, output = min(wavelengths), max(wavelengths)
-    pylab.imshow(sRGB_COLOURSPACE.OECF(
+    pylab.imshow(sRGB_COLOURSPACE.encoding_cctf(
         np.dstack([spectrum.R.values,
                    spectrum.G.values,
                    spectrum.B.values])),
