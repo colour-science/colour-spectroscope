@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 """
 Spectroscope - Analysis
 =======================
@@ -17,13 +16,9 @@ from __future__ import division, unicode_literals
 import numpy as np
 import scipy.ndimage
 
-from colour import (
-    Extrapolator,
-    LinearInterpolator,
-    RGB_COLOURSPACES,
-    RGB_luminance,
-    SpectralPowerDistribution,
-    TriSpectralPowerDistribution)
+from colour import (Extrapolator, LinearInterpolator, RGB_COLOURSPACES,
+                    RGB_luminance, SpectralPowerDistribution,
+                    MultiSpectralPowerDistribution)
 
 __author__ = 'Colour Developers'
 __copyright__ = 'Copyright (C) 2013-2017 - Colour Developers'
@@ -32,14 +27,13 @@ __maintainer__ = 'Colour Developers'
 __email__ = 'colour-science@googlegroups.com'
 __status__ = 'Production'
 
-__all__ = ['RGB_Spectrum',
-           'image_profile',
-           'calibrate_RGB_spectrum_profile',
-           'RGB_spectrum',
-           'luminance_spd']
+__all__ = [
+    'RGB_Spectrum', 'image_profile', 'calibrate_RGB_spectrum_profile',
+    'RGB_spectrum', 'luminance_spd'
+]
 
 
-class RGB_Spectrum(TriSpectralPowerDistribution):
+class RGB_Spectrum(MultiSpectralPowerDistribution):
     """
     Defines an *RGB* spectrum object implementation.
 
@@ -58,15 +52,16 @@ class RGB_Spectrum(TriSpectralPowerDistribution):
     """
 
     def __init__(self, name, data):
-        TriSpectralPowerDistribution.__init__(self,
-                                              name,
-                                              data,
-                                              mapping={'x': 'R',
-                                                       'y': 'G',
-                                                       'z': 'B'},
-                                              labels={'x': 'R',
-                                                      'y': 'G',
-                                                      'z': 'B'})
+        MultiSpectralPowerDistribution.__init__(
+            self,
+            name,
+            data,
+            mapping={'x': 'R',
+                     'y': 'G',
+                     'z': 'B'},
+            labels={'x': 'R',
+                    'y': 'G',
+                    'z': 'B'})
 
     @property
     def R(self):
@@ -224,8 +219,9 @@ def calibrate_RGB_spectrum_profile(profile, reference, measured, samples=None):
     """
 
     samples = samples if samples else profile.shape[1]
-    measured_lines = [line for line, value in
-                      sorted(measured.items(), key=lambda x: x[1])]
+    measured_lines = [
+        line for line, value in sorted(measured.items(), key=lambda x: x[1])
+    ]
 
     # Reference samples.
     r = np.array([reference.get(sample) for sample in measured_lines])
@@ -251,16 +247,16 @@ def calibrate_RGB_spectrum_profile(profile, reference, measured, samples=None):
     B_interpolator = Extrapolator(
         LinearInterpolator(np.arange(0, profile.shape[1]), profile[0, :, 2]))
 
-    wavelengths = np.linspace(mm_to_rr_interpolator([0]),
-                              mm_to_rr_interpolator([profile.shape[1]]),
-                              samples)
+    wavelengths = np.linspace(
+        mm_to_rr_interpolator([0]),
+        mm_to_rr_interpolator([profile.shape[1]]), samples)
 
-    R = dict(zip(wavelengths,
-                 R_interpolator(r_to_m_interpolator(wavelengths))))
-    G = dict(zip(wavelengths,
-                 G_interpolator(r_to_m_interpolator(wavelengths))))
-    B = dict(zip(wavelengths,
-                 B_interpolator(r_to_m_interpolator(wavelengths))))
+    R = dict(
+        zip(wavelengths, R_interpolator(r_to_m_interpolator(wavelengths))))
+    G = dict(
+        zip(wavelengths, G_interpolator(r_to_m_interpolator(wavelengths))))
+    B = dict(
+        zip(wavelengths, B_interpolator(r_to_m_interpolator(wavelengths))))
 
     return RGB_Spectrum('RGB Spectrum', {'R': R, 'G': G, 'B': B})
 
@@ -288,18 +284,17 @@ def RGB_spectrum(image, reference, measured, samples=None):
     """
 
     samples = samples if samples else image.shape[1]
-    profile = image_profile(image,
-                            line=[0, 0, image.shape[1] - 1, 0],
-                            samples=samples)
+    profile = image_profile(
+        image, line=[0, 0, image.shape[1] - 1, 0], samples=samples)
 
-    return calibrate_RGB_spectrum_profile(profile=profile,
-                                          reference=reference,
-                                          measured=measured,
-                                          samples=samples)
+    return calibrate_RGB_spectrum_profile(
+        profile=profile,
+        reference=reference,
+        measured=measured,
+        samples=samples)
 
 
-def luminance_spd(spectrum,
-                  colourspace=RGB_COLOURSPACES['sRGB']):
+def luminance_spd(spectrum, colourspace=RGB_COLOURSPACES['sRGB']):
     """
     Returns the luminance spectral power distribution of given RGB spectrum.
 
@@ -315,11 +310,9 @@ def luminance_spd(spectrum,
         and normalised to [0, 100] domain.
     """
 
-    spectrum = spectrum.clone().normalise(100)
-    luminance = lambda x: RGB_luminance(
-        x, colourspace.primaries, colourspace.whitepoint)
+    spectrum = spectrum.copy().normalise(100)
+    luminance = lambda x: RGB_luminance(x, colourspace.primaries, colourspace.whitepoint)
 
     return SpectralPowerDistribution(
-        'RGB_spectrum',
-        dict([(wavelength, luminance(RGB))
-              for wavelength, RGB in spectrum]))
+        dict([(wavelength, luminance(RGB)) for wavelength, RGB in spectrum]),
+        name='RGB_spectrum')

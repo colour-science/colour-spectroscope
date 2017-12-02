@@ -202,10 +202,10 @@ def fraunhofer_lines_plot(image=SUN_SPECTRUM_IMAGE):
         is_large_line = label in FRAUNHOFER_LINES_NOTABLE
 
         pylab.vlines(fraunhofer_wavelengths[i], y0, y1 * scale,
-                     linewidth=2 if is_large_line else 1)
+                     linewidth=1 if is_large_line else 1)
 
         pylab.vlines(fraunhofer_wavelengths[i], y0, height,
-                     linewidth=2 if is_large_line else 1, alpha=0.075)
+                     linewidth=1 if is_large_line else 1, alpha=0.075)
 
         if not from_siblings:
             pylab.text(fraunhofer_wavelengths[i],
