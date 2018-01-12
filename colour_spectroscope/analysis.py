@@ -80,19 +80,6 @@ class RGB_Spectrum(MultiSpectralPowerDistribution):
 
         return self.x
 
-    @R.setter
-    def R(self, value):
-        """
-        Setter for **self.R** attribute.
-
-        Parameters
-        ----------
-        value : object
-            Attribute value.
-        """
-
-        raise AttributeError('"{0}" attribute is read only!'.format('R'))
-
     @property
     def G(self):
         """
@@ -110,19 +97,6 @@ class RGB_Spectrum(MultiSpectralPowerDistribution):
 
         return self.y
 
-    @G.setter
-    def G(self, value):
-        """
-        Setter for **self.G** attribute.
-
-        Parameters
-        ----------
-        value : object
-            Attribute value.
-        """
-
-        raise AttributeError('"{0}" attribute is read only!'.format('G'))
-
     @property
     def B(self):
         """
@@ -139,19 +113,6 @@ class RGB_Spectrum(MultiSpectralPowerDistribution):
         """
 
         return self.z
-
-    @B.setter
-    def B(self, value):
-        """
-        Setter for **self.B** attribute.
-
-        Parameters
-        ----------
-        value : object
-            Attribute value.
-        """
-
-        raise AttributeError('"{0}" attribute is read only!'.format('B'))
 
 
 def image_profile(image, line, samples=None):
@@ -311,7 +272,8 @@ def luminance_spd(spectrum, colourspace=RGB_COLOURSPACES['sRGB']):
     """
 
     spectrum = spectrum.copy().normalise(100)
-    luminance = lambda x: RGB_luminance(x, colourspace.primaries, colourspace.whitepoint)
+    luminance = lambda x: RGB_luminance(x, colourspace.primaries,
+                                        colourspace.whitepoint)
 
     return SpectralPowerDistribution(
         dict([(wavelength, luminance(RGB)) for wavelength, RGB in spectrum]),
