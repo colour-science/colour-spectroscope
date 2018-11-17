@@ -20,8 +20,7 @@ import os
 import re
 
 from colour import read_image
-from colour.models import sRGB_COLOURSPACE
-from colour.plotting import override_style, render
+from colour.plotting import COLOUR_STYLE_CONSTANTS, override_style, render
 
 from colour_spectroscope.fraunhofer import calibrated_RGB_spectrum
 from colour_spectroscope.fraunhofer.analysis import luminance_spd
@@ -170,7 +169,8 @@ def fraunhofer_lines_plot(image,
     input, output = min(wavelengths), max(wavelengths)
 
     plt.imshow(
-        sRGB_COLOURSPACE.encoding_cctf(spectrum.values[np.newaxis, ...]),
+        COLOUR_STYLE_CONSTANTS.colour.colourspace.encoding_cctf(
+            spectrum.values[np.newaxis, ...]),
         extent=[input, output, 0, height])
 
     spd = luminance_spd(spectrum).normalise(height * 0.9)
@@ -250,5 +250,5 @@ if __name__ == '__main__':
         os.path.join(RESOURCES_DIRECTORY, 'Fraunhofer_Lines_001.png'))
 
     fraunhofer_lines_plot(
-        sRGB_COLOURSPACE.decoding_cctf(read_image(sun_spectrum_image)),
-        FRAUNHOFER_LINES_MEASURED)
+        COLOUR_STYLE_CONSTANTS.colour.colourspace.decoding_cctf(
+            read_image(sun_spectrum_image)), FRAUNHOFER_LINES_MEASURED)
