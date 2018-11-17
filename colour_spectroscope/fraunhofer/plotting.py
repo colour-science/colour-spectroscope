@@ -20,7 +20,8 @@ import os
 import re
 
 from colour import read_image
-from colour.plotting import COLOUR_STYLE_CONSTANTS, override_style, render
+from colour.plotting import (COLOUR_STYLE_CONSTANTS, override_style, artist,
+                             render)
 
 from colour_spectroscope.fraunhofer import calibrated_RGB_spectrum
 from colour_spectroscope.fraunhofer.analysis import luminance_spd
@@ -139,7 +140,8 @@ FRAUNHOFER_LINES_MEASURED = {
 @override_style()
 def fraunhofer_lines_plot(image,
                           measured_Fraunhofer_lines,
-                          show_luminance_spd=False):
+                          show_luminance_spd=False,
+                          **kwargs):
     """
     Plots the *Fraunhofer* lines of given image.
 
@@ -152,30 +154,39 @@ def fraunhofer_lines_plot(image,
     show_luminance_spd : bool, optional
         Whether to show the *Luminance* spd for given image.
 
+    Other Parameters
+    ----------------
+    \\**kwargs : dict, optional
+        {:func:`colour.plotting.artist`, :func:`colour.plotting.render`},
+        Please refer to the documentation of the previously listed definitions.
+
     Returns
     -------
     tuple
         Current figure and axes.
     """
 
+    settings = {}
+    settings.update(kwargs)
+
+    figure, axes = artist(**settings)
+
     spectrum = calibrated_RGB_spectrum(image, FRAUNHOFER_LINES_PUBLISHED,
                                        measured_Fraunhofer_lines)
 
     height = len(spectrum.values) / 8
 
-    plt.title('The Solar Spectrum - Fraunhofer Lines')
-
     wavelengths = spectrum.wavelengths
     input, output = min(wavelengths), max(wavelengths)
 
-    plt.imshow(
+    axes.imshow(
         COLOUR_STYLE_CONSTANTS.colour.colourspace.encoding_cctf(
             spectrum.values[np.newaxis, ...]),
         extent=[input, output, 0, height])
 
     spd = luminance_spd(spectrum).normalise(height * 0.9)
     if show_luminance_spd:
-        plt.plot(spd.wavelengths, spd.values, color='black', linewidth=1)
+        axes.plot(spd.wavelengths, spd.values, color='black', linewidth=1)
 
     fraunhofer_wavelengths = np.array(
         sorted(FRAUNHOFER_LINES_PUBLISHED.values()))
@@ -207,13 +218,13 @@ def fraunhofer_lines_plot(image,
 
         is_large_line = label in FRAUNHOFER_LINES_NOTABLE
 
-        plt.vlines(
+        axes.vlines(
             fraunhofer_wavelengths[i],
             y0,
             y1 * scale,
             linewidth=1 if is_large_line else 1)
 
-        plt.vlines(
+        axes.vlines(
             fraunhofer_wavelengths[i],
             y0,
             height,
@@ -221,7 +232,7 @@ def fraunhofer_lines_plot(image,
             alpha=0.075)
 
         if not from_siblings:
-            plt.text(
+            axes.text(
                 fraunhofer_wavelengths[i],
                 y1 * scale + (y1 * 0.025),
                 label,
@@ -235,20 +246,11 @@ def fraunhofer_lines_plot(image,
     plt.yticks([])
 
     settings = {
+        'title': 'The Solar Spectrum - Fraunhofer Lines',
         'bounding_box': [input, output, 0, height],
         'x_label': u'Wavelength λ (nm)',
         'y_label': False,
     }
+    settings.update(**kwargs)
 
     return render(**settings)
-
-
-if __name__ == '__main__':
-    from colour_spectroscope import RESOURCES_DIRECTORY
-
-    sun_spectrum_image = str(
-        os.path.join(RESOURCES_DIRECTORY, 'Fraunhofer_Lines_001.png'))
-
-    fraunhofer_lines_plot(
-        COLOUR_STYLE_CONSTANTS.colour.colourspace.decoding_cctf(
-            read_image(sun_spectrum_image)), FRAUNHOFER_LINES_MEASURED)
