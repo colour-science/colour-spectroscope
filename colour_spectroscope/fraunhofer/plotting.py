@@ -3,8 +3,8 @@
 Fraunhofer Lines
 ================
 
-Defines objects for the homemade spectroscope spectrum images of *Fraunhofer*
-lines analysis.
+Defines objects for the analysis of the *Fraunhofer* lines in images captured
+with the homemade spectroscope.
 
 References
 ==========
@@ -22,7 +22,9 @@ import re
 from colour import read_image
 from colour.models import sRGB_COLOURSPACE
 from colour.plotting import override_style, render
-from analysis import calibrated_RGB_spectrum, luminance_spd
+
+from colour_spectroscope.fraunhofer import calibrated_RGB_spectrum
+from colour_spectroscope.fraunhofer.analysis import luminance_spd
 
 __author__ = 'Colour Developers'
 __copyright__ = 'Copyright (C) 2013-2018 - Colour Developers'
@@ -32,15 +34,10 @@ __email__ = 'colour-science@googlegroups.com'
 __status__ = 'Production'
 
 __all__ = [
-    'RESOURCES_DIRECTORY', 'SUN_SPECTRUM_IMAGE', 'FRAUNHOFER_LINES_PUBLISHED',
-    'FRAUNHOFER_LINES_ELEMENTS_MAPPING', 'FRAUNHOFER_LINES_NOTABLE',
-    'FRAUNHOFER_LINES_CLUSTERED', 'FRAUNHOFER_LINES_MEASURED',
-    'fraunhofer_lines_plot'
+    'FRAUNHOFER_LINES_PUBLISHED', 'FRAUNHOFER_LINES_ELEMENTS_MAPPING',
+    'FRAUNHOFER_LINES_NOTABLE', 'FRAUNHOFER_LINES_CLUSTERED',
+    'FRAUNHOFER_LINES_MEASURED', 'fraunhofer_lines_plot'
 ]
-
-RESOURCES_DIRECTORY = os.path.join(os.path.dirname(__file__), 'resources')
-SUN_SPECTRUM_IMAGE = str(
-    os.path.join(RESOURCES_DIRECTORY, 'Fraunhofer_Lines_001.png'))
 
 FRAUNHOFER_LINES_PUBLISHED = {
     'y': 898.765,
@@ -247,6 +244,11 @@ def fraunhofer_lines_plot(image,
 
 
 if __name__ == '__main__':
+    from colour_spectroscope import RESOURCES_DIRECTORY
+
+    sun_spectrum_image = str(
+        os.path.join(RESOURCES_DIRECTORY, 'Fraunhofer_Lines_001.png'))
+
     fraunhofer_lines_plot(
-        sRGB_COLOURSPACE.decoding_cctf(read_image(SUN_SPECTRUM_IMAGE)),
+        sRGB_COLOURSPACE.decoding_cctf(read_image(sun_spectrum_image)),
         FRAUNHOFER_LINES_MEASURED)
