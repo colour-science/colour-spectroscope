@@ -184,7 +184,7 @@ def fraunhofer_lines_plot(image,
             spectrum.values[np.newaxis, ...]),
         extent=[input, output, 0, height])
 
-    spd = luminance_spd(spectrum).normalise(height * 0.9)
+    spd = luminance_spd(spectrum).normalise(height - height * 0.05)
     if show_luminance_spd:
         axes.plot(spd.wavelengths, spd.values, color='black', linewidth=1)
 
