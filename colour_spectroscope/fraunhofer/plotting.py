@@ -16,10 +16,8 @@ from __future__ import division, unicode_literals
 import bisect
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 import re
 
-from colour import read_image
 from colour.plotting import (COLOUR_STYLE_CONSTANTS, override_style, artist,
                              render)
 
@@ -140,7 +138,7 @@ FRAUNHOFER_LINES_MEASURED = {
 @override_style()
 def fraunhofer_lines_plot(image,
                           measured_Fraunhofer_lines,
-                          show_luminance_spd=False,
+                          show_luminance_spd=True,
                           **kwargs):
     """
     Plots the *Fraunhofer* lines of given image.
@@ -174,10 +172,12 @@ def fraunhofer_lines_plot(image,
     spectrum = calibrated_RGB_spectrum(image, FRAUNHOFER_LINES_PUBLISHED,
                                        measured_Fraunhofer_lines)
 
-    height = len(spectrum.values) / 8
-
     wavelengths = spectrum.wavelengths
-    input, output = min(wavelengths), max(wavelengths)
+    input, output = wavelengths[0], wavelengths[-1]
+
+    width, height = figure.get_size_inches()
+    ratio = width / height
+    height = (output - input) * (1 / ratio)
 
     axes.imshow(
         COLOUR_STYLE_CONSTANTS.colour.colourspace.encoding_cctf(
