@@ -29,7 +29,7 @@ __status__ = 'Production'
 
 __all__ = [
     'RGB_Spectrum', 'image_profile', 'calibrate_RGB_spectrum_profile',
-    'RGB_spectrum', 'luminance_spd'
+    'calibrated_RGB_spectrum', 'luminance_spd'
 ]
 
 
@@ -188,7 +188,7 @@ def calibrate_RGB_spectrum_profile(profile, reference, measured, samples=None):
         name='RGB Spectrum')
 
 
-def RGB_spectrum(image, reference, measured, samples=None):
+def calibrated_RGB_spectrum(image, reference, measured, samples=None):
     """
     Returns the RGB spectrum of given image.
 
@@ -242,4 +242,4 @@ def luminance_spd(spectrum, colourspace=RGB_COLOURSPACES['sRGB']):
 
     return SpectralPowerDistribution(
         dict(zip(spectrum.wavelengths, luminance(spectrum.values))),
-        name='RGB_spectrum')
+        name='calibrated_RGB_spectrum')

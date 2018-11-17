@@ -3,7 +3,7 @@
 Fraunhofer Lines
 ================
 
-Defines objects for the homemade spectroscope spectrum images of Fraunhofer
+Defines objects for the homemade spectroscope spectrum images of *Fraunhofer*
 lines analysis.
 
 References
@@ -14,16 +14,15 @@ References
 from __future__ import division, unicode_literals
 
 import bisect
-import matplotlib.pyplot
+import matplotlib.pyplot as plt
 import numpy as np
 import os
-import pylab
 import re
 
 from colour import read_image
 from colour.models import sRGB_COLOURSPACE
 from colour.plotting import override_style, render
-from analysis import RGB_spectrum, luminance_spd
+from analysis import calibrated_RGB_spectrum, luminance_spd
 
 __author__ = 'Colour Developers'
 __copyright__ = 'Copyright (C) 2013-2018 - Colour Developers'
@@ -142,14 +141,20 @@ FRAUNHOFER_LINES_MEASURED = {
 
 
 @override_style()
-def fraunhofer_lines_plot(image=SUN_SPECTRUM_IMAGE):
+def fraunhofer_lines_plot(image,
+                          measured_Fraunhofer_lines,
+                          show_luminance_spd=False):
     """
-    Plots the Fraunhofer lines of given image.
+    Plots the *Fraunhofer* lines of given image.
 
     Parameters
     ----------
     image : unicode
         Path to read the image from.
+    measured_Fraunhofer_lines : dict, optional
+        Measured *Fraunhofer* lines locations.
+    show_luminance_spd : bool, optional
+        Whether to show the *Luminance* spd for given image.
 
     Returns
     -------
@@ -157,23 +162,23 @@ def fraunhofer_lines_plot(image=SUN_SPECTRUM_IMAGE):
         Current figure and axes.
     """
 
-    spectrum = RGB_spectrum(
-        sRGB_COLOURSPACE.decoding_cctf(read_image(image)),
-        FRAUNHOFER_LINES_PUBLISHED, FRAUNHOFER_LINES_MEASURED)
+    spectrum = calibrated_RGB_spectrum(image, FRAUNHOFER_LINES_PUBLISHED,
+                                       measured_Fraunhofer_lines)
 
     height = len(spectrum.values) / 8
-    spd = luminance_spd(spectrum).normalise(height)
 
-    pylab.title('The Solar Spectrum - Fraunhofer Lines')
+    plt.title('The Solar Spectrum - Fraunhofer Lines')
 
     wavelengths = spectrum.wavelengths
     input, output = min(wavelengths), max(wavelengths)
 
-    pylab.imshow(
+    plt.imshow(
         sRGB_COLOURSPACE.encoding_cctf(spectrum.values[np.newaxis, ...]),
         extent=[input, output, 0, height])
 
-    pylab.plot(spd.wavelengths, spd.values, color='black', linewidth=1)
+    spd = luminance_spd(spectrum).normalise(height * 0.9)
+    if show_luminance_spd:
+        plt.plot(spd.wavelengths, spd.values, color='black', linewidth=1)
 
     fraunhofer_wavelengths = np.array(
         sorted(FRAUNHOFER_LINES_PUBLISHED.values()))
@@ -189,7 +194,7 @@ def fraunhofer_lines_plot(image=SUN_SPECTRUM_IMAGE):
     y0, y1 = 0, height * .5
     for i, label in enumerate(fraunhofer_lines_labels):
 
-        # Trick to cluster siblings fraunhofer lines.
+        # Trick to cluster siblings *Fraunhofer* lines.
         from_siblings = False
         for pattern, (first, siblings,
                       specific_label) in FRAUNHOFER_LINES_CLUSTERED.items():
@@ -205,13 +210,13 @@ def fraunhofer_lines_plot(image=SUN_SPECTRUM_IMAGE):
 
         is_large_line = label in FRAUNHOFER_LINES_NOTABLE
 
-        pylab.vlines(
+        plt.vlines(
             fraunhofer_wavelengths[i],
             y0,
             y1 * scale,
             linewidth=1 if is_large_line else 1)
 
-        pylab.vlines(
+        plt.vlines(
             fraunhofer_wavelengths[i],
             y0,
             height,
@@ -219,7 +224,7 @@ def fraunhofer_lines_plot(image=SUN_SPECTRUM_IMAGE):
             alpha=0.075)
 
         if not from_siblings:
-            pylab.text(
+            plt.text(
                 fraunhofer_wavelengths[i],
                 y1 * scale + (y1 * 0.025),
                 label,
@@ -229,11 +234,11 @@ def fraunhofer_lines_plot(image=SUN_SPECTRUM_IMAGE):
                 fontdict={'size': 'large' if is_large_line else 'small'})
 
     r = lambda x: int(x / 100) * 100
-    matplotlib.pyplot.xticks(np.arange(r(input), r(output * 1.5), 20))
+    plt.xticks(np.arange(r(input), r(output * 1.5), 20))
+    plt.yticks([])
 
     settings = {
         'bounding_box': [input, output, 0, height],
-        'y_ticker': True,
         'x_label': u'Wavelength λ (nm)',
         'y_label': False,
     }
@@ -242,4 +247,6 @@ def fraunhofer_lines_plot(image=SUN_SPECTRUM_IMAGE):
 
 
 if __name__ == '__main__':
-    fraunhofer_lines_plot()
+    fraunhofer_lines_plot(
+        sRGB_COLOURSPACE.decoding_cctf(read_image(SUN_SPECTRUM_IMAGE)),
+        FRAUNHOFER_LINES_MEASURED)
