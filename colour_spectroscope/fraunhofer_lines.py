@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 Fraunhofer Lines
 ================
@@ -21,11 +20,10 @@ import os
 import pylab
 import re
 
-from colour import sRGB_COLOURSPACE, read_image
-from colour.plotting import boundaries, decorate, display
-from analysis import (
-    RGB_spectrum,
-    luminance_spd)
+from colour import read_image
+from colour.models import sRGB_COLOURSPACE
+from colour.plotting import override_style, render
+from analysis import RGB_spectrum, luminance_spd
 
 __author__ = 'Colour Developers'
 __copyright__ = 'Copyright (C) 2013-2018 - Colour Developers'
@@ -34,18 +32,16 @@ __maintainer__ = 'Colour Developers'
 __email__ = 'colour-science@googlegroups.com'
 __status__ = 'Production'
 
-__all__ = ['RESOURCES_DIRECTORY',
-           'SUN_SPECTRUM_IMAGE',
-           'FRAUNHOFER_LINES_PUBLISHED',
-           'FRAUNHOFER_LINES_ELEMENTS_MAPPING',
-           'FRAUNHOFER_LINES_NOTABLE',
-           'FRAUNHOFER_LINES_CLUSTERED',
-           'FRAUNHOFER_LINES_MEASURED',
-           'fraunhofer_lines_plot']
+__all__ = [
+    'RESOURCES_DIRECTORY', 'SUN_SPECTRUM_IMAGE', 'FRAUNHOFER_LINES_PUBLISHED',
+    'FRAUNHOFER_LINES_ELEMENTS_MAPPING', 'FRAUNHOFER_LINES_NOTABLE',
+    'FRAUNHOFER_LINES_CLUSTERED', 'FRAUNHOFER_LINES_MEASURED',
+    'fraunhofer_lines_plot'
+]
 
 RESOURCES_DIRECTORY = os.path.join(os.path.dirname(__file__), 'resources')
-SUN_SPECTRUM_IMAGE = str(os.path.join(RESOURCES_DIRECTORY,
-                                  'Fraunhofer_Lines_001.png'))
+SUN_SPECTRUM_IMAGE = str(
+    os.path.join(RESOURCES_DIRECTORY, 'Fraunhofer_Lines_001.png'))
 
 FRAUNHOFER_LINES_PUBLISHED = {
     'y': 898.765,
@@ -75,7 +71,8 @@ FRAUNHOFER_LINES_PUBLISHED = {
     'N': 358.121,
     'P': 336.112,
     'T': 302.108,
-    't': 299.444}
+    't': 299.444,
+}
 
 FRAUNHOFER_LINES_ELEMENTS_MAPPING = {
     'y': 'O2',
@@ -107,7 +104,8 @@ FRAUNHOFER_LINES_ELEMENTS_MAPPING = {
     'N': 'Fe',
     'P': 'Ti+',
     'T': 'Fe',
-    't': 'Ni'}
+    't': 'Ni',
+}
 
 FRAUNHOFER_LINES_NOTABLE = (
     'A',
@@ -120,10 +118,17 @@ FRAUNHOFER_LINES_NOTABLE = (
     'F',
     'G',
     'H',
-    'K')
+    'K',
+)
 
-FRAUNHOFER_LINES_CLUSTERED = {'b[1-4]': ('b2', ('b4', 'b3', 'b1',), 'b\n4-1'),
-                              'D[1-3]': ('D3', ('D2', 'D1'), 'D\n3-1')}
+FRAUNHOFER_LINES_CLUSTERED = {
+    'b[1-4]': ('b2', (
+        'b4',
+        'b3',
+        'b1',
+    ), 'b\n4-1'),
+    'D[1-3]': ('D3', ('D2', 'D1'), 'D\n3-1')
+}
 
 FRAUNHOFER_LINES_MEASURED = {
     'G': 134,
@@ -132,9 +137,11 @@ FRAUNHOFER_LINES_MEASURED = {
     'E2': 545,
     'D1': 810,
     'a': 974,
-    'C': 1095}
+    'C': 1095
+}
 
 
+@override_style()
 def fraunhofer_lines_plot(image=SUN_SPECTRUM_IMAGE):
     """
     Plots the Fraunhofer lines of given image.
@@ -146,40 +153,38 @@ def fraunhofer_lines_plot(image=SUN_SPECTRUM_IMAGE):
 
     Returns
     -------
-    bool
-        Definition success.
+    tuple
+        Current figure and axes.
     """
 
-    spectrum = RGB_spectrum(read_image(image),
-                            FRAUNHOFER_LINES_PUBLISHED,
-                            FRAUNHOFER_LINES_MEASURED)
+    spectrum = RGB_spectrum(
+        sRGB_COLOURSPACE.decoding_cctf(read_image(image)),
+        FRAUNHOFER_LINES_PUBLISHED, FRAUNHOFER_LINES_MEASURED)
 
-    height = len(spectrum.R.values) / 8
+    height = len(spectrum.values) / 8
     spd = luminance_spd(spectrum).normalise(height)
 
     pylab.title('The Solar Spectrum - Fraunhofer Lines')
 
     wavelengths = spectrum.wavelengths
     input, output = min(wavelengths), max(wavelengths)
-    pylab.imshow(sRGB_COLOURSPACE.encoding_cctf(
-        np.dstack([spectrum.R.values,
-                   spectrum.G.values,
-                   spectrum.B.values])),
+
+    pylab.imshow(
+        sRGB_COLOURSPACE.encoding_cctf(spectrum.values[np.newaxis, ...]),
         extent=[input, output, 0, height])
 
-    pylab.plot(spd.wavelengths,
-               spd.values, color='black',
-               linewidth=1)
+    pylab.plot(spd.wavelengths, spd.values, color='black', linewidth=1)
 
     fraunhofer_wavelengths = np.array(
         sorted(FRAUNHOFER_LINES_PUBLISHED.values()))
-    fraunhofer_wavelengths = fraunhofer_wavelengths[
-        np.where(np.logical_and(fraunhofer_wavelengths >= input,
-                                fraunhofer_wavelengths <= output))]
+    fraunhofer_wavelengths = fraunhofer_wavelengths[np.where(
+        np.logical_and(fraunhofer_wavelengths >= input,
+                       fraunhofer_wavelengths <= output))]
     fraunhofer_lines_labels = [
-        tuple(FRAUNHOFER_LINES_PUBLISHED.keys())[
-            tuple(FRAUNHOFER_LINES_PUBLISHED.values()).index(i)]
-        for i in fraunhofer_wavelengths]
+        tuple(FRAUNHOFER_LINES_PUBLISHED.keys())[tuple(
+            FRAUNHOFER_LINES_PUBLISHED.values()).index(i)]
+        for i in fraunhofer_wavelengths
+    ]
 
     y0, y1 = 0, height * .5
     for i, label in enumerate(fraunhofer_lines_labels):
@@ -196,42 +201,44 @@ def fraunhofer_lines_plot(image=SUN_SPECTRUM_IMAGE):
                 break
 
         power = bisect.bisect_left(wavelengths, fraunhofer_wavelengths[i])
-        scale = (spd.get(wavelengths[power]) / height)
+        scale = (spd[wavelengths[power]] / height)
 
         is_large_line = label in FRAUNHOFER_LINES_NOTABLE
 
-        pylab.vlines(fraunhofer_wavelengths[i], y0, y1 * scale,
-                     linewidth=1 if is_large_line else 1)
+        pylab.vlines(
+            fraunhofer_wavelengths[i],
+            y0,
+            y1 * scale,
+            linewidth=1 if is_large_line else 1)
 
-        pylab.vlines(fraunhofer_wavelengths[i], y0, height,
-                     linewidth=1 if is_large_line else 1, alpha=0.075)
+        pylab.vlines(
+            fraunhofer_wavelengths[i],
+            y0,
+            height,
+            linewidth=1 if is_large_line else 1,
+            alpha=0.075)
 
         if not from_siblings:
-            pylab.text(fraunhofer_wavelengths[i],
-                       y1 * scale + (y1 * 0.025),
-                       label,
-                       clip_on=True,
-                       ha='center',
-                       va='bottom',
-                       fontdict={'size': 'large' if is_large_line else'small'})
+            pylab.text(
+                fraunhofer_wavelengths[i],
+                y1 * scale + (y1 * 0.025),
+                label,
+                clip_on=True,
+                ha='center',
+                va='bottom',
+                fontdict={'size': 'large' if is_large_line else 'small'})
 
     r = lambda x: int(x / 100) * 100
     matplotlib.pyplot.xticks(np.arange(r(input), r(output * 1.5), 20))
 
-    settings = {'x_tighten': True,
-                'y_tighten': True,
-                'x_label': u'Wavelength λ (nm)',
-                'y_label': False,
-                'legend': False,
-                'limits': [input, output, 0, height],
-                'y_ticker': True,
-                'grid': True}
+    settings = {
+        'bounding_box': [input, output, 0, height],
+        'y_ticker': True,
+        'x_label': u'Wavelength λ (nm)',
+        'y_label': False,
+    }
 
-    boundaries(**settings)
-
-    decorate(**settings)
-
-    return display(**settings)
+    return render(**settings)
 
 
 if __name__ == '__main__':

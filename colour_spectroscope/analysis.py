@@ -18,6 +18,7 @@ import scipy.ndimage
 from colour import (Extrapolator, LinearInterpolator, RGB_COLOURSPACES,
                     RGB_luminance, SpectralPowerDistribution,
                     MultiSpectralPowerDistribution)
+from colour.utilities import tstack
 
 __author__ = 'Colour Developers'
 __copyright__ = 'Copyright (C) 2013-2018 - Colour Developers'
@@ -38,80 +39,45 @@ class RGB_Spectrum(MultiSpectralPowerDistribution):
 
     Parameters
     ----------
-    name : unicode
-        *RGB* spectrum name.
-    data : dict
-        *RGB* spectrum.
+    data : Series or Dataframe or Signal or MultiSignal or \
+MultiSpectralPowerDistribution or array_like or dict_like, optional
+        Data to be stored in the multi-spectral power distribution.
+    domain : array_like, optional
+        Values to initialise the multiple
+        :class:`colour.SpectralPowerDistribution` class instances
+        :attr:`colour.continuous.Signal.wavelengths` attribute with. If both
+        ``data`` and ``domain`` arguments are defined, the latter will be used
+        to initialise the :attr:`colour.continuous.Signal.wavelengths`
+        attribute.
+    labels : array_like, optional
+        Names to use for the :class:`colour.SpectralPowerDistribution` class
+        instances.
 
-    Attributes
-    ----------
-    R
-    G
-    B
+    Other Parameters
+    ----------------
+    name : unicode, optional
+       Multi-spectral power distribution name.
+    interpolator : object, optional
+        Interpolator class type to use as interpolating function for the
+        :class:`colour.SpectralPowerDistribution` class instances.
+    interpolator_args : dict_like, optional
+        Arguments to use when instantiating the interpolating function
+        of the :class:`colour.SpectralPowerDistribution` class instances.
+    extrapolator : object, optional
+        Extrapolator class type to use as extrapolating function for the
+        :class:`colour.SpectralPowerDistribution` class instances.
+    extrapolator_args : dict_like, optional
+        Arguments to use when instantiating the extrapolating function
+        of the :class:`colour.SpectralPowerDistribution` class instances.
+    strict_labels : array_like, optional
+        Multi-spectral power distribution labels for figures, default to
+        :attr:`colour.characterisation.RGB_SpectralSensitivities.labels`
+        attribute value.
     """
 
-    def __init__(self, name, data):
-        MultiSpectralPowerDistribution.__init__(
-            self,
-            name,
-            data,
-            mapping={'x': 'R',
-                     'y': 'G',
-                     'z': 'B'},
-            labels={'x': 'R',
-                    'y': 'G',
-                    'z': 'B'})
-
-    @property
-    def R(self):
-        """
-        Property for **self.R** attribute.
-
-        Returns
-        -------
-        SpectralPowerDistribution
-            self.R
-
-        Warning
-        -------
-        :attr:`RGB_Spectrum.R` is read only.
-        """
-
-        return self.x
-
-    @property
-    def G(self):
-        """
-        Property for **self.G** attribute.
-
-        Returns
-        -------
-        SpectralPowerDistribution
-            self.G
-
-        Warning
-        -------
-        :attr:`RGB_Spectrum.G` is read only.
-        """
-
-        return self.y
-
-    @property
-    def B(self):
-        """
-        Property for **self.B** attribute.
-
-        Returns
-        -------
-        SpectralPowerDistribution
-            self.B
-
-        Warning
-        -------
-        :attr:`RGB_Spectrum.B` is read only.
-        """
-
-        return self.z
+    def __init__(self, data=None, domain=None, labels=None, **kwargs):
+        super(RGB_Spectrum, self).__init__(
+            data, domain, labels=('R', 'G', 'B'), **kwargs)
 
 
 def image_profile(image, line, samples=None):
@@ -149,7 +115,7 @@ def image_profile(image, line, samples=None):
         z = image[:, :, i]
 
         profile.append(
-            scipy.ndimage.map_coordinates(np.transpose(z), np.vstack((x, y))))
+            scipy.ndimage.map_coordinates(np.transpose(z), np.vstack([x, y])))
 
     return np.dstack(profile)
 
@@ -208,17 +174,18 @@ def calibrate_RGB_spectrum_profile(profile, reference, measured, samples=None):
         LinearInterpolator(np.arange(0, profile.shape[1]), profile[0, :, 2]))
 
     wavelengths = np.linspace(
-        mm_to_rr_interpolator([0]),
-        mm_to_rr_interpolator([profile.shape[1]]), samples)
+        mm_to_rr_interpolator([0]), mm_to_rr_interpolator([profile.shape[1]]),
+        samples)
 
-    R = dict(
-        zip(wavelengths, R_interpolator(r_to_m_interpolator(wavelengths))))
-    G = dict(
-        zip(wavelengths, G_interpolator(r_to_m_interpolator(wavelengths))))
-    B = dict(
-        zip(wavelengths, B_interpolator(r_to_m_interpolator(wavelengths))))
-
-    return RGB_Spectrum('RGB Spectrum', {'R': R, 'G': G, 'B': B})
+    return RGB_Spectrum(
+        dict(
+            zip(wavelengths,
+                tstack([
+                    R_interpolator(r_to_m_interpolator(wavelengths)),
+                    G_interpolator(r_to_m_interpolator(wavelengths)),
+                    B_interpolator(r_to_m_interpolator(wavelengths))
+                ]))),
+        name='RGB Spectrum')
 
 
 def RGB_spectrum(image, reference, measured, samples=None):
@@ -271,9 +238,8 @@ def luminance_spd(spectrum, colourspace=RGB_COLOURSPACES['sRGB']):
     """
 
     spectrum = spectrum.copy().normalise(100)
-    luminance = lambda x: RGB_luminance(x, colourspace.primaries,
-                                        colourspace.whitepoint)
+    luminance = lambda x: RGB_luminance(x, colourspace.primaries, colourspace.whitepoint)
 
     return SpectralPowerDistribution(
-        dict([(wavelength, luminance(RGB)) for wavelength, RGB in spectrum]),
+        dict(zip(spectrum.wavelengths, luminance(spectrum.values))),
         name='RGB_spectrum')
