@@ -22,7 +22,7 @@ from colour.plotting import (COLOUR_STYLE_CONSTANTS, override_style, artist,
                              render)
 
 from colour_spectroscope.fraunhofer import calibrated_RGB_spectrum
-from colour_spectroscope.fraunhofer.analysis import luminance_spd
+from colour_spectroscope.fraunhofer.analysis import luminance_sd
 
 __author__ = 'Colour Developers'
 __copyright__ = 'Copyright (C) 2013-2018 - Colour Developers'
@@ -150,7 +150,7 @@ def fraunhofer_lines_plot(image,
     measured_Fraunhofer_lines : dict, optional
         Measured *Fraunhofer* lines locations.
     show_luminance_spd : bool, optional
-        Whether to show the *Luminance* spd for given image.
+        Whether to show the *Luminance* sd for given image.
 
     Other Parameters
     ----------------
@@ -184,9 +184,9 @@ def fraunhofer_lines_plot(image,
             np.clip(spectrum.values[np.newaxis, ...], 0, 1)),
         extent=[input, output, 0, height])
 
-    spd = luminance_spd(spectrum).normalise(height - height * 0.05)
+    sd = luminance_sd(spectrum).normalise(height - height * 0.05)
     if show_luminance_spd:
-        axes.plot(spd.wavelengths, spd.values, color='black', linewidth=1)
+        axes.plot(sd.wavelengths, sd.values, color='black', linewidth=1)
 
     fraunhofer_wavelengths = np.array(
         sorted(FRAUNHOFER_LINES_PUBLISHED.values()))
@@ -214,7 +214,7 @@ def fraunhofer_lines_plot(image,
                 break
 
         power = bisect.bisect_left(wavelengths, fraunhofer_wavelengths[i])
-        scale = (spd[wavelengths[power]] / height)
+        scale = (sd[wavelengths[power]] / height)
 
         is_large_line = label in FRAUNHOFER_LINES_NOTABLE
 

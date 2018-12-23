@@ -16,8 +16,8 @@ import numpy as np
 import scipy.ndimage
 
 from colour import (Extrapolator, LinearInterpolator, RGB_COLOURSPACES,
-                    RGB_luminance, SpectralPowerDistribution,
-                    MultiSpectralPowerDistribution)
+                    RGB_luminance, SpectralDistribution,
+                    MultiSpectralDistribution)
 from colour.utilities import tstack
 
 __author__ = 'Colour Developers'
@@ -29,48 +29,47 @@ __status__ = 'Production'
 
 __all__ = [
     'RGB_Spectrum', 'image_profile', 'calibrate_RGB_spectrum_profile',
-    'calibrated_RGB_spectrum', 'luminance_spd'
+    'calibrated_RGB_spectrum', 'luminance_sd'
 ]
 
 
-class RGB_Spectrum(MultiSpectralPowerDistribution):
+class RGB_Spectrum(MultiSpectralDistribution):
     """
     Defines an *RGB* spectrum object implementation.
 
     Parameters
     ----------
     data : Series or Dataframe or Signal or MultiSignal or \
-MultiSpectralPowerDistribution or array_like or dict_like, optional
-        Data to be stored in the multi-spectral power distribution.
+MultiSpectralDistribution or array_like or dict_like, optional
+        Data to be stored in the multi-spectral distribution.
     domain : array_like, optional
-        Values to initialise the multiple
-        :class:`colour.SpectralPowerDistribution` class instances
-        :attr:`colour.continuous.Signal.wavelengths` attribute with. If both
-        ``data`` and ``domain`` arguments are defined, the latter will be used
-        to initialise the :attr:`colour.continuous.Signal.wavelengths`
-        attribute.
+        Values to initialise the multiple :class:`colour.SpectralDistribution`
+        class instances :attr:`colour.continuous.Signal.wavelengths` attribute
+        with. If both ``data`` and ``domain`` arguments are defined, the latter
+        will be used to initialise the
+        :attr:`colour.continuous.Signal.wavelengths` attribute.
     labels : array_like, optional
-        Names to use for the :class:`colour.SpectralPowerDistribution` class
+        Names to use for the :class:`colour.SpectralDistribution` class
         instances.
 
     Other Parameters
     ----------------
     name : unicode, optional
-       Multi-spectral power distribution name.
+       Multi-spectral distribution name.
     interpolator : object, optional
         Interpolator class type to use as interpolating function for the
-        :class:`colour.SpectralPowerDistribution` class instances.
+        :class:`colour.SpectralDistribution` class instances.
     interpolator_args : dict_like, optional
         Arguments to use when instantiating the interpolating function
-        of the :class:`colour.SpectralPowerDistribution` class instances.
+        of the :class:`colour.SpectralDistribution` class instances.
     extrapolator : object, optional
         Extrapolator class type to use as extrapolating function for the
-        :class:`colour.SpectralPowerDistribution` class instances.
+        :class:`colour.SpectralDistribution` class instances.
     extrapolator_args : dict_like, optional
         Arguments to use when instantiating the extrapolating function
-        of the :class:`colour.SpectralPowerDistribution` class instances.
+        of the :class:`colour.SpectralDistribution` class instances.
     strict_labels : array_like, optional
-        Multi-spectral power distribution labels for figures, default to
+        Multi-spectral distribution labels for figures, default to
         :attr:`colour.characterisation.RGB_SpectralSensitivities.labels`
         attribute value.
     """
@@ -221,9 +220,9 @@ def calibrated_RGB_spectrum(image, reference, measured, samples=None):
         samples=samples)
 
 
-def luminance_spd(spectrum, colourspace=RGB_COLOURSPACES['sRGB']):
+def luminance_sd(spectrum, colourspace=RGB_COLOURSPACES['sRGB']):
     """
-    Returns the luminance spectral power distribution of given RGB spectrum.
+    Returns the luminance spectral distribution of given RGB spectrum.
 
     Parameters
     ----------
@@ -232,14 +231,17 @@ def luminance_spd(spectrum, colourspace=RGB_COLOURSPACES['sRGB']):
     colourspace : RGB_Colourspace
         *RGB* Colourspace.
 
-    SpectralPowerDistribution
-        RGB spectrum luminance spectral power distribution, units are arbitrary
+    Returns
+    -------
+    SpectralDistribution
+        RGB spectrum luminance spectral distribution, units are arbitrary
         and normalised to [0, 100] domain.
     """
 
     spectrum = spectrum.copy().normalise(100)
-    luminance = lambda x: RGB_luminance(x, colourspace.primaries, colourspace.whitepoint)
+    luminance = lambda x: RGB_luminance(x, colourspace.primaries, colourspace.
+                                        whitepoint)
 
-    return SpectralPowerDistribution(
+    return SpectralDistribution(
         dict(zip(spectrum.wavelengths, luminance(spectrum.values))),
         name='calibrated_RGB_spectrum')
