@@ -17,7 +17,7 @@ import scipy.ndimage
 
 from colour import (Extrapolator, LinearInterpolator, RGB_COLOURSPACES,
                     RGB_luminance, SpectralDistribution,
-                    MultiSpectralDistribution)
+                    MultiSpectralDistributions)
 from colour.utilities import tstack
 
 __author__ = 'Colour Developers'
@@ -33,15 +33,15 @@ __all__ = [
 ]
 
 
-class RGB_Spectrum(MultiSpectralDistribution):
+class RGB_Spectrum(MultiSpectralDistributions):
     """
     Defines an *RGB* spectrum object implementation.
 
     Parameters
     ----------
     data : Series or Dataframe or Signal or MultiSignal or \
-MultiSpectralDistribution or array_like or dict_like, optional
-        Data to be stored in the multi-spectral distribution.
+MultiSpectralDistributions or array_like or dict_like, optional
+        Data to be stored in the multi-spectral distributions.
     domain : array_like, optional
         Values to initialise the multiple :class:`colour.SpectralDistribution`
         class instances :attr:`colour.continuous.Signal.wavelengths` attribute
