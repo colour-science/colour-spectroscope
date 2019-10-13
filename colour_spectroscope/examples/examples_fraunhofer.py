@@ -18,5 +18,5 @@ SUN_SPECTRUM_IMAGE = str(
     os.path.join(RESOURCES_DIRECTORY, 'Fraunhofer_Lines_001.png'))
 
 fraunhofer_lines_plot(
-    COLOUR_STYLE_CONSTANTS.colour.colourspace.decoding_cctf(
+    COLOUR_STYLE_CONSTANTS.colour.colourspace.cctf_decoding(
         read_image(SUN_SPECTRUM_IMAGE)), FRAUNHOFER_LINES_MEASURED)

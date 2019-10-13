@@ -180,7 +180,7 @@ def fraunhofer_lines_plot(image,
     height = (output - input) * (1 / ratio)
 
     axes.imshow(
-        COLOUR_STYLE_CONSTANTS.colour.colourspace.encoding_cctf(
+        COLOUR_STYLE_CONSTANTS.colour.colourspace.cctf_encoding(
             np.clip(spectrum.values[np.newaxis, ...], 0, 1)),
         extent=[input, output, 0, height])
 
