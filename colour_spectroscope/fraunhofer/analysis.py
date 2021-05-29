@@ -3,7 +3,7 @@
 Spectroscope - Analysis
 =======================
 
-Defines objects for the homemade spectroscope spectrum images analysis.
+Defines the objects for the homemade spectroscope spectrum images analysis.
 
 References
 ----------

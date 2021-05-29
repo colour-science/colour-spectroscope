@@ -3,8 +3,8 @@
 Fraunhofer Lines
 ================
 
-Defines objects for the analysis of the *Fraunhofer* lines in images captured
-with the homemade spectroscope.
+Defines the objects for the analysis of the *Fraunhofer* lines in images
+captured with the homemade spectroscope.
 
 References
 ==========
