@@ -68,7 +68,7 @@ MultiSpectralDistributions or array_like or dict_like, optional
     extrapolator_args : dict_like, optional
         Arguments to use when instantiating the extrapolating function
         of the :class:`colour.SpectralDistribution` class instances.
-    strict_labels : array_like, optional
+    display_labels : array_like, optional
         Multi-spectral distribution labels for figures, default to
         :attr:`colour.characterisation.RGB_SpectralSensitivities.labels`
         attribute value.

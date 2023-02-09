@@ -181,7 +181,7 @@ def fraunhofer_lines_plot(image,
 
     axes.imshow(
         COLOUR_STYLE_CONSTANTS.colour.colourspace.cctf_encoding(
-            np.clip(spectrum.values[np.newaxis, ...], 0, 1)),
+            np.clip(spectrum.values[None, ...], 0, 1)),
         extent=[input, output, 0, height])
 
     sd = luminance_sd(spectrum).normalise(height - height * 0.05)
